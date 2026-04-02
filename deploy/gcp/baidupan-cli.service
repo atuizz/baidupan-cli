@@ -1,0 +1,17 @@
+[Unit]
+Description=baidupan-cli api service
+After=network.target
+
+[Service]
+Type=simple
+User=saonianatui
+WorkingDirectory=/home/saonianatui/baidupan-cli
+Environment=PYTHONUNBUFFERED=1
+Environment=BDPAN_WRAPPER_HOME=/home/saonianatui/.bdpan-wrapper
+Environment=BDPAN_BIN=/home/saonianatui/.local/bin/bdpan
+ExecStart=/home/saonianatui/baidupan-cli/.venv/bin/python -m uvicorn bdpan_wrapper.api.app:create_app --factory --host 0.0.0.0 --port 8091 --http h11 --ws none
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

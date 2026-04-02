@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "baidupan-cli"
+version = "0.2.0"
+description = "Third-party Baidu Netdisk CLI and API wrapper built on the official bdpan CLI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "BaiduPan CLI contributors" }
+]
+keywords = ["baidu-pan", "bdpan", "cli", "api", "fastapi"]
+dependencies = [
+  "fastapi>=0.116,<1",
+  "pydantic>=2.11,<3",
+  "python-multipart>=0.0.20,<1",
+  "uvicorn>=0.35,<1"
+]
+
+[project.urls]
+Homepage = "https://github.com/atuizz/baidupan-cli"
+Repository = "https://github.com/atuizz/baidupan-cli"
+Issues = "https://github.com/atuizz/baidupan-cli/issues"
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.28,<1",
+  "pytest>=8.3,<9"
+]
+
+[project.scripts]
+baidupan-cli = "bdpan_wrapper.cli:main"
+bdpan-wrapper = "bdpan_wrapper.cli:main"
+bdpan-cli = "bdpan_wrapper.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bdpan_wrapper = ["api/static/**/*"]

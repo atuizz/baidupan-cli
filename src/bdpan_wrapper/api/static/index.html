@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/portal.css" />
+    <title>BaiduPan CLI API</title>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">BaiduPan CLI API</span>
+          <h1>BaiduPan CLI API, docs, and test console</h1>
+          <p>
+            Third-party CLI and API wrapper built on the official <code>bdpan</code> CLI.
+            One account maps to one config directory. The main supported workspace is
+            <code>/apps/bdpan</code>.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a href="/docs" target="_blank" rel="noreferrer">OpenAPI Docs</a>
+          <a href="/redoc" target="_blank" rel="noreferrer">ReDoc</a>
+          <button id="refresh-status" type="button">Refresh runtime status</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Runtime and limitations</h2>
+          </div>
+          <div id="runtime-status" class="runtime-status">Loading...</div>
+          <ul class="notes">
+            <li>Built on the official bdpan CLI. No cookie grabbing or browser reverse engineering.</li>
+            <li>One account maps to one independent config directory.</li>
+            <li>Main chain: bind, status check, mkdir, ls, upload-share, transfer-share.</li>
+            <li><code>search</code> is currently unreliable and is not part of the supported contract.</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Protocol overview</h2>
+          </div>
+          <div class="endpoint-table">
+            <div class="endpoint-row head">
+              <span>Protocol</span>
+              <span>Description</span>
+              <span>Entry</span>
+            </div>
+            <div class="endpoint-row">
+              <code>REST JSON</code>
+              <span>Primary API with a unified response envelope.</span>
+              <code>/api/v1/*</code>
+            </div>
+            <div class="endpoint-row">
+              <code>Multipart</code>
+              <span>Browser or SDK file uploads.</span>
+              <code>/api/v1/files/browser-upload-share</code>
+            </div>
+            <div class="endpoint-row">
+              <code>Compat Query</code>
+              <span>Compatibility layer for query and form style integrations.</span>
+              <code>/compat/baidu/*</code>
+            </div>
+            <div class="endpoint-row">
+              <code>OpenAPI</code>
+              <span>Standard Swagger and ReDoc output.</span>
+              <code>/docs</code> / <code>/redoc</code>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel full">
+          <div class="panel-head">
+            <h2>Core endpoints</h2>
+          </div>
+          <div class="api-grid">
+            <article class="api-card">
+              <strong>Account bind</strong>
+              <p><code>POST /api/v1/accounts/bind/start</code></p>
+              <p><code>POST /api/v1/accounts/bind/complete</code></p>
+            </article>
+            <article class="api-card">
+              <strong>Directory operations</strong>
+              <p><code>POST /api/v1/files/list</code></p>
+              <p><code>POST /api/v1/files/mkdir</code></p>
+            </article>
+            <article class="api-card">
+              <strong>Upload and share</strong>
+              <p><code>POST /api/v1/files/browser-upload-share</code></p>
+            </article>
+            <article class="api-card">
+              <strong>Transfer share</strong>
+              <p><code>POST /api/v1/shares/transfer</code></p>
+              <p><code>GET /compat/baidu/transfer</code></p>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel full">
+          <div class="panel-head">
+            <h2>Try it in browser</h2>
+            <div class="tester-tabs">
+              <button class="active" data-target="tester-rest" type="button">REST JSON</button>
+              <button data-target="tester-upload" type="button">Upload-share</button>
+              <button data-target="tester-compat" type="button">Compat Query</button>
+            </div>
+          </div>
+
+          <div class="tester-group active" id="tester-rest">
+            <div class="tester-fields">
+              <label>
+                Endpoint
+                <select id="rest-endpoint">
+                  <option value="/api/v1/accounts">GET /api/v1/accounts</option>
+                  <option value="/api/v1/tasks">GET /api/v1/tasks</option>
+                  <option value="/api/v1/system/status">GET /api/v1/system/status</option>
+                  <option value="/api/v1/files/list">POST /api/v1/files/list</option>
+                  <option value="/api/v1/files/mkdir">POST /api/v1/files/mkdir</option>
+                  <option value="/api/v1/shares/transfer">POST /api/v1/shares/transfer</option>
+                </select>
+              </label>
+              <label>
+                JSON Body
+                <textarea id="rest-body">{
+  "account_id": "",
+  "remote_path": "/apps/bdpan"
+}</textarea>
+              </label>
+            </div>
+            <button id="send-rest" class="primary" type="button">Send REST request</button>
+          </div>
+
+          <div class="tester-group" id="tester-upload">
+            <div class="tester-fields">
+              <label>
+                Account ID
+                <input id="upload-account-id" type="text" placeholder="account_id" />
+              </label>
+              <label>
+                Remote path
+                <input id="upload-remote-path" type="text" value="/apps/bdpan/releases/demo.txt" />
+              </label>
+              <label>
+                Select file
+                <input id="upload-file" type="file" />
+              </label>
+            </div>
+            <button id="send-upload" class="primary" type="button">Send upload-share request</button>
+          </div>
+
+          <div class="tester-group" id="tester-compat">
+            <div class="tester-fields three">
+              <label>
+                Account ID
+                <input id="compat-account-id" type="text" placeholder="account_id" />
+              </label>
+              <label>
+                Share URL
+                <input id="compat-url" type="text" placeholder="https://pan.baidu.com/s/..." />
+              </label>
+              <label>
+                Password
+                <input id="compat-pwd" type="text" placeholder="abcd" />
+              </label>
+              <label>
+                Save path
+                <input id="compat-path" type="text" value="/apps/bdpan/inbox/demo" />
+              </label>
+            </div>
+            <button id="send-compat" class="primary" type="button">Send compat request</button>
+          </div>
+
+          <div class="response-block">
+            <div class="response-head">
+              <strong>Response</strong>
+              <button id="copy-response" type="button">Copy response</button>
+            </div>
+            <pre id="response-output">Waiting for a request...</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/portal.js"></script>
+  </body>
+</html>

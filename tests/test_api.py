@@ -5,6 +5,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from bdpan_wrapper.accounts.models import DeliveryAccount
+from bdpan_wrapper.bdpan.parser import BaiduMkdirResult, BaiduWhoAmIResult
+from bdpan_wrapper.enums import AccountStatus
 from bdpan_wrapper.api import app as app_module
 from bdpan_wrapper.enums import DeliveryProvider, TaskKind, TaskStatus
 from bdpan_wrapper.models import DeliveryArtifact, DeliveryTaskRecord
@@ -33,6 +36,9 @@ class FakeLsEntry:
 
 
 class FakeFiles:
+    def mkdir(self, *, account_id, remote_path):
+        return BaiduMkdirResult(remote_path=remote_path, created=True, raw_text="")
+
     def upload_and_share(self, request):
         return DeliveryTaskRecord(
             id="task-1",
@@ -75,6 +81,19 @@ class FakeBinding:
                 "auth_url": "https://example.com/auth",
             },
         )()
+
+    def complete_binding(self, *, account_id, auth_code):
+        return DeliveryAccount(
+            id=account_id,
+            provider=DeliveryProvider.BAIDU_PAN,
+            display_name="primary",
+            config_path="/tmp/config.json",
+            username="demo",
+            status=AccountStatus.ACTIVE,
+        )
+
+    def check_account(self, *, account_id):
+        return BaiduWhoAmIResult(logged_in=True, username="demo", expires_at=None)
 
 
 class FailingBinding:
@@ -202,6 +221,75 @@ def test_api_v1_transfer_endpoint_returns_enveloped_payload(tmp_path: Path, monk
     payload = response.json()
     assert payload["success"] is True
     assert payload["data"]["artifact"]["remote_path"] == "/apps/bdpan/inbox/demo"
+
+
+def test_api_v1_bind_start_complete_and_check(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(
+        app_module,
+        "build_runtime",
+        lambda: FakeRuntime(
+            paths=FakePaths(uploads_dir=tmp_path),
+            files=FakeFiles(),
+            accounts=FakeAccounts(),
+            tasks=FakeTasks(),
+            binding=FakeBinding(),
+        ),
+    )
+    client = TestClient(app_module.create_app())
+
+    start_response = client.post("/api/v1/accounts/bind/start", json={"display_name": "primary"})
+    assert start_response.status_code == 200
+    start_payload = start_response.json()
+    assert start_payload["success"] is True
+    assert start_payload["data"]["auth_url"] == "https://example.com/auth"
+
+    complete_response = client.post(
+        "/api/v1/accounts/bind/complete",
+        json={"account_id": "acc-1", "auth_code": "abcd"},
+    )
+    assert complete_response.status_code == 200
+    complete_payload = complete_response.json()
+    assert complete_payload["success"] is True
+    assert complete_payload["data"]["id"] == "acc-1"
+
+    check_response = client.post("/api/v1/accounts/acc-1/check")
+    assert check_response.status_code == 200
+    check_payload = check_response.json()
+    assert check_payload["success"] is True
+    assert check_payload["data"]["logged_in"] is True
+
+
+def test_api_v1_mkdir_and_list(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(
+        app_module,
+        "build_runtime",
+        lambda: FakeRuntime(
+            paths=FakePaths(uploads_dir=tmp_path),
+            files=FakeFiles(),
+            accounts=FakeAccounts(),
+            tasks=FakeTasks(),
+            binding=FakeBinding(),
+        ),
+    )
+    client = TestClient(app_module.create_app())
+
+    mkdir_response = client.post(
+        "/api/v1/files/mkdir",
+        json={"account_id": "acc-1", "remote_path": "/apps/bdpan/releases"},
+    )
+    assert mkdir_response.status_code == 200
+    mkdir_payload = mkdir_response.json()
+    assert mkdir_payload["success"] is True
+    assert mkdir_payload["data"]["created"] is True
+
+    list_response = client.post(
+        "/api/v1/files/list",
+        json={"account_id": "acc-1", "remote_path": "/apps/bdpan"},
+    )
+    assert list_response.status_code == 200
+    list_payload = list_response.json()
+    assert list_payload["success"] is True
+    assert list_payload["data"][0]["name"] == "demo"
 
 
 def test_compat_transfer_endpoint_accepts_query_params(tmp_path: Path, monkeypatch) -> None:

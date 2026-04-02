@@ -1,39 +1,38 @@
 ## Current Stage
-- Goal: publish this workspace as a public GitHub repository named `baidupan-cli`.
+- Goal: make the public `baidupan-cli` repository bilingual, structurally clear, and better backed by main-chain tests.
 - Completed:
-  - Reframed the project as a CLI-first repository aligned with the `kuake_cli` style.
-  - Reworked the CLI entry in `src/bdpan_wrapper/cli.py`.
-  - Added config workflow support with `config.json`, runtime overrides, and default account resolution.
-  - Rewrote `README.md` into a clean GitHub-facing project README.
-  - Cleaned API portal strings and removed garbled user-facing text from the CLI and API portal.
-  - Added GitHub Actions CI in `.github/workflows/ci.yml`.
-  - Renamed deployment assets toward `baidupan-cli` and removed stale frontend/build artifacts.
-  - Initialized git and created the first commit.
+  - Rewrote `README.md` into a Chinese + English public-facing README.
+  - Rewrote `sdk/python/README.md` into a bilingual integration note.
+  - Added `docs/ARCHITECTURE.md` with bilingual module boundaries, request flow, and testing strategy.
+  - Added `tests/test_runtime.py` to verify runtime directory initialization and service wiring.
+  - Expanded `tests/test_api.py` to cover more of the promised API main chain:
+    - bind start
+    - bind complete
+    - account check
+    - mkdir
+    - list
+  - Cleaned local cache artifacts again before release.
 - In progress:
-  - Creating the public GitHub repository and pushing `main`.
+  - Commit and push the bilingual documentation and test hardening to GitHub.
 - Next:
-  - Create `atuizz/baidupan-cli` as a public repository.
-  - Push the local `main` branch.
+  - Push the updated `main` branch.
 
 ## Verification
 - Command: `python -m pytest -q`
-- Result: `16 passed`
+- Result: `20 passed`
 - Command: `python -m bdpan_wrapper --help`
-- Result: CLI help renders correctly with the new command surface.
+- Result: CLI help still renders correctly.
 - Uncovered risk:
-  - The internal Python package name remains `bdpan_wrapper` for compatibility, even though the repository/project name is now `baidupan-cli`.
+  - Repository-level validation is strong, but real Baidu-side verification still depends on a machine with a working official `bdpan` CLI and a real account.
 
 ## Key Files
 - `README.md`
-- `pyproject.toml`
-- `.github/workflows/ci.yml`
-- `src/bdpan_wrapper/cli.py`
-- `src/bdpan_wrapper/api/app.py`
-- `src/bdpan_wrapper/api/static/index.html`
-- `src/bdpan_wrapper/api/static/portal.js`
-- `deploy/gcp/baidupan-cli.service`
+- `sdk/python/README.md`
+- `docs/ARCHITECTURE.md`
+- `tests/test_api.py`
+- `tests/test_runtime.py`
 
 ## Git Status
 - Branch: `main`
-- Recent commit: `e02a5601857bbb04807260bd619c6c6bd5a0115f`
-- Pushed: no
+- Recent commit: `b80d43a`
+- Pushed: yes, but the latest bilingual/test changes are not pushed yet
